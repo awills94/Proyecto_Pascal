@@ -1,10 +1,12 @@
 # depslib dependency file v1.0
-1435107153 source:/home/mint/Documents/Progra3/Proyecto_Mario/main.cpp
+1435706698 source:/home/mint/Documents/Progra3/Proyecto_Mario/main.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_image.h>
 	<iostream>
 	<SDL2/SDL_ttf.h>
 	<list>
+	<SDL2/SDL_mixer.h>
+	<fstream>
 	"Pascal.h"
 	"Camaleon.h"
 	"Moscas.h"
@@ -19,7 +21,7 @@
 
 1434589878 /home/mint/Documents/Progra3/Proyecto_Mario/Pascal.h
 
-1435064775 source:/home/mint/Documents/Progra3/Proyecto_Mario/Camaleon.cpp
+1435556216 source:/home/mint/Documents/Progra3/Proyecto_Mario/Camaleon.cpp
 	"Camaleon.h"
 	<iostream>
 

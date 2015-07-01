@@ -3,6 +3,8 @@
 #include<iostream>
 #include<SDL2/SDL_ttf.h>
 #include<list>
+#include <SDL2/SDL_mixer.h>
+#include <fstream>
 
 #include "Pascal.h"
 #include "Camaleon.h"
@@ -14,15 +16,25 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Event Event;
 SDL_Texture *Fondo;
+SDL_Texture *Air;
+SDL_Texture *Sun;
+SDL_Texture *Sun2;
 SDL_Rect rect_Fondo;
+SDL_Rect rect_Air;
+SDL_Rect rect_Sun;
+SDL_Rect rect_Sun2;
 SDL_Rect rect_MoscasComidas;
 SDL_Rect rect_MoscasPasadas;
 SDL_Rect rect_background;
+
+Mix_Music *gMusic = NULL;
 
 using namespace std;
 
     list<Moscas*>List_moscas;
     list<Avispas*>List_Avispas;
+
+    int MoscasComidas=0;
 
     std::string toString(int number)
 {
@@ -42,8 +54,68 @@ returnvalue+=temp[temp.length()-i-1];
 return returnvalue;
 }
 
-void FinJuego()
+void FinJuego(int Score)
 {
+
+string MC= "Total Moscas Comidas " + toString(Score);
+
+    rect_MoscasComidas.x = 300;
+    rect_MoscasComidas.y = 170;
+    rect_MoscasComidas.w = 350;
+    rect_MoscasComidas.h = 50;
+
+
+SDL_Color Color = {250,0,0};
+TTF_Font *Font = TTF_OpenFont("Font.ttf", 300);
+
+SDL_Surface* Temp = TTF_RenderText_Solid(Font,MC.c_str(), Color);
+SDL_Texture* Texto = SDL_CreateTextureFromSurface(renderer,  Temp);
+
+            Temp = TTF_RenderText_Solid(Font,MC.c_str(), Color);
+            Texto = SDL_CreateTextureFromSurface(renderer, Temp);
+
+            SDL_RenderCopy(renderer, Texto, NULL, &rect_MoscasComidas);
+
+            SDL_FreeSurface(Temp);
+            SDL_DestroyTexture(Texto);
+
+
+
+int w=0,h=0;
+    Fondo = IMG_LoadTexture(renderer,"Perdiste.png");
+    SDL_QueryTexture(Fondo, NULL, NULL, &w, &h);
+    rect_background.x = 0;
+    rect_background.y = 0;
+    rect_background.w = w;
+    rect_background.h = h;
+
+    ofstream out("Mejores_Scores");
+    out<<Score<<endl;
+    out.close();
+
+    while(true)
+    {
+        while(SDL_PollEvent(&Event))
+        {
+            if(Event.type == SDL_QUIT)
+            {
+                return;
+            }
+            if(Event.type == SDL_KEYDOWN)
+            {
+                 if(Event.type == SDL_KEYDOWN)
+                    {
+                        if(Event.key.keysym.sym == SDLK_RETURN)
+                        {
+                            return;
+                        }
+                    }
+            }
+        }
+    SDL_RenderCopy(renderer, Fondo, NULL, &rect_background);
+    SDL_RenderPresent(renderer);
+    return;
+    }
 
 }
 
@@ -51,14 +123,19 @@ void Juego()
 {
 
     int MoscasPasadas=0;
-    int MoscasComidas=0;
+    MoscasComidas=0;
+    bool Fin = false;
 
     string MC= "Moscas Comidas " + toString(MoscasComidas);
     string MP= "Moscas Pasadas " + toString(MoscasPasadas);
 
 
-    rect_MoscasComidas.x = 10;
-    rect_MoscasComidas.y = 10;
+
+                            List_Avispas.clear();
+                            List_moscas.clear();
+
+    rect_MoscasComidas.x = 20;
+    rect_MoscasComidas.y = 20;
     rect_MoscasComidas.w = 350;
     rect_MoscasComidas.h = 50;
 
@@ -89,12 +166,33 @@ int w=0,h=0;
 
 
 
+    rect_Air.x = -100;
+    rect_Air.y = 200;
+    rect_Air.w = 80;
+    rect_Air.h = 40;
+    Air = IMG_LoadTexture(renderer,"air1.png");
+    SDL_QueryTexture(Air, NULL, NULL, &w, &h);
+    int tempAir=0;
+
+    rect_Sun.x = 0;
+    rect_Sun.y = 230;
+    rect_Sun.w = 50;
+    rect_Sun.h = 40;
+
+    rect_Sun2.x = 0;
+    rect_Sun2.y = 100;
+    rect_Sun2.w = 70;
+    rect_Sun2.h = 70;
+
+    Sun  = IMG_LoadTexture(renderer,"sun.png");
+    SDL_QueryTexture(Sun, NULL, NULL, &w, &h);
+
+
+
 
 unsigned int frame_anterior = SDL_GetTicks();
 
     Camaleon camaleon(renderer);
-
-//    Moscas mosca(renderer);
 
     int frame=0;
 
@@ -114,13 +212,13 @@ unsigned int frame_anterior = SDL_GetTicks();
                     {
                         if(Event.key.keysym.sym == SDLK_RETURN)
                         {
-                            Juego();
                         }
                         if(Event.key.keysym.sym == SDLK_p)
                         {
-                            return;
                             List_Avispas.clear();
                             List_moscas.clear();
+                            return;
+
                         }
                     }
             }
@@ -128,6 +226,19 @@ unsigned int frame_anterior = SDL_GetTicks();
 
 
             SDL_RenderCopy(renderer, Fondo, NULL, &rect_background);
+                    if(Fin==true)
+                    {
+                    SDL_DestroyTexture(camaleon.textura);
+                    SDL_DestroyTexture(Sun);
+                    SDL_DestroyTexture(Air);
+                    FinJuego(MoscasComidas);
+                    return;
+                    }
+
+
+            SDL_RenderCopy(renderer, Air, NULL, &rect_Air);
+            SDL_RenderCopy(renderer, Sun, NULL, &rect_Sun);
+            SDL_RenderCopy(renderer, Sun2, NULL, &rect_Sun2);
             camaleon.dibujar();
             camaleon.logica();
 
@@ -145,6 +256,87 @@ unsigned int frame_anterior = SDL_GetTicks();
             SDL_DestroyTexture(Texto);
             SDL_FreeSurface(Temp2);
             SDL_DestroyTexture(Texto2);
+
+            if(frame%2==0)
+            {
+            rect_Sun.x-=1;
+            rect_Air.x+=1;
+            }
+
+            if(frame%7==0)
+            {
+            rect_Sun2.x+=1;
+            }
+
+
+            if(rect_Air.x>980)
+            rect_Air.x = -10;
+
+            if(tempAir>40)
+                tempAir=0;
+
+            if(rect_Sun.x<0)
+            rect_Sun.x = 940;
+
+            if(rect_Sun2.x>940)
+            rect_Sun2.x = 0;
+
+
+
+            if (tempAir<10)
+            {
+                    SDL_DestroyTexture(Air);
+                    Air = IMG_LoadTexture(renderer,"Nube1.png");
+
+                    SDL_DestroyTexture(Sun);
+                    Sun = IMG_LoadTexture(renderer,"sun.png");
+
+                    SDL_DestroyTexture(Sun2);
+                    Sun2 = IMG_LoadTexture(renderer,"sol1.png");
+            }
+            else if (tempAir<20)
+            {
+                    SDL_DestroyTexture(Air);
+                    Air = IMG_LoadTexture(renderer,"Nube2.png");
+
+                    SDL_DestroyTexture(Sun);
+                    Sun = IMG_LoadTexture(renderer,"sun1.png");
+
+                    SDL_DestroyTexture(Sun2);
+                    Sun2 = IMG_LoadTexture(renderer,"sol2.png");
+            }
+            else if (tempAir<30)
+            {
+                    SDL_DestroyTexture(Air);
+                    Air = IMG_LoadTexture(renderer,"Nube3.png");
+
+                    SDL_DestroyTexture(Sun);
+                    Sun = IMG_LoadTexture(renderer,"sun2.png");
+
+                    SDL_DestroyTexture(Sun2);
+                    Sun2 = IMG_LoadTexture(renderer,"sol3.png");
+            }
+            else if (tempAir<40)
+            {
+
+                    SDL_DestroyTexture(Sun);
+                    Sun = IMG_LoadTexture(renderer,"sun3.png");
+
+                    SDL_DestroyTexture(Air);
+                    Air = IMG_LoadTexture(renderer,"Nube4.png");
+
+                    SDL_DestroyTexture(Sun2);
+                    Sun2 = IMG_LoadTexture(renderer,"sol4.png");
+            }
+
+
+        if(Mix_PlayingMusic()==0)
+        {
+        Mix_PlayMusic(gMusic,-1);
+        }
+
+
+
 
                     int tempFrame;
 
@@ -211,6 +403,7 @@ unsigned int frame_anterior = SDL_GetTicks();
                     }
 
 
+
                     else if (frame>7000)
                     {
                         if(frame%50==0)
@@ -235,10 +428,11 @@ unsigned int frame_anterior = SDL_GetTicks();
 
                                     if(camaleon.rect_textura.x<=tempmax & camaleon.rect_textura.x>=tempmin)
                                     {
-                                      List_Avispas.erase(i);
                                       List_Avispas.clear();
                                       List_moscas.clear();
-                                      return;
+                                      Fin=true;
+                                      Fondo = IMG_LoadTexture(renderer,"perdiste.png");
+                                      break;
                                     }
                                 }
                         }
@@ -264,8 +458,8 @@ unsigned int frame_anterior = SDL_GetTicks();
 
                                     if(camaleon.rect_textura.x<=tempmax & camaleon.rect_textura.x>=tempmin)
                                     {
-                                    MoscasComidas++;
                                     List_moscas.erase(i);
+                                    MoscasComidas++;
 
                                     tempFrame=frame;
                                       SDL_DestroyTexture(camaleon.textura);
@@ -278,8 +472,6 @@ unsigned int frame_anterior = SDL_GetTicks();
                         }
 
 
-
-
                     if((SDL_GetTicks()-frame_anterior)<10)
                     SDL_Delay(10-(SDL_GetTicks()-frame_anterior));
                     frame_anterior=SDL_GetTicks();
@@ -290,7 +482,7 @@ unsigned int frame_anterior = SDL_GetTicks();
 
             SDL_RenderPresent(renderer);
             frame++;
-
+            tempAir++;
 
 
 
@@ -298,14 +490,11 @@ unsigned int frame_anterior = SDL_GetTicks();
             {
                 List_Avispas.clear();
                 List_moscas.clear();
-                return;
+                Fondo = IMG_LoadTexture(renderer,"perdiste.png");
+                Fin = true;
 
             }
-
-
      }
-
-FinJuego();
 
 }
 
@@ -345,6 +534,7 @@ void Instrucciones()
             SDL_RenderCopy(renderer, background_menu, NULL, &rect_background);
             SDL_RenderPresent(renderer);
      }
+
 }
 
 }
@@ -415,6 +605,15 @@ int main( int argc, char* args[] )
     {
         std::cout << SDL_GetError() << std::endl;
         return 30;
+    }
+
+    if( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
+     {
+     printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", SDL_GetError());
+     }
+    gMusic=Mix_LoadMUS("Fade.mp3");
+    if(gMusic==NULL){
+        printf("Error loading: %s\n", Mix_GetError());
     }
 
     if(TTF_Init()==-1)
